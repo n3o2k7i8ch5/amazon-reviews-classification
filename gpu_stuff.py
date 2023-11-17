@@ -4,13 +4,11 @@ import torch
 
 
 def get_gpu_memory_map():
-    result = subprocess.check_output(
-        [
-            'nvidia-smi', '--query-gpu=memory.used',
-            '--format=csv,nounits,noheader'
-        ])
-
-    return float(result)
+    return float(subprocess.check_output([
+        'nvidia-smi',
+        '--query-gpu=memory.used',
+        '--format=csv,nounits,noheader'
+    ]))
 
 
 def pretty_size(size):
@@ -42,6 +40,6 @@ def dump_tensors(gpu_only=True):
                                                    " volatile" if obj.volatile else "",
                                                    pretty_size(obj.data.size())))
                     total_size += obj.data.numel()
-        except Exception as e:
+        except Exception:
             pass
     print("Total size:", total_size)

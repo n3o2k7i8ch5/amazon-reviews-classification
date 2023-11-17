@@ -4,18 +4,19 @@ import re
 import nltk
 import numpy as np
 import pickle
+import spacy
 
 
 def create_data():
     nltk.download('punkt')
 
-    train_file = bz2.BZ2File('./train.ft.txt.bz2')
-    test_file = bz2.BZ2File('./test.ft.txt.bz2')
+    train_file = bz2.BZ2File('data/train.ft.txt.bz2')
+    test_file = bz2.BZ2File('data/test.ft.txt.bz2')
 
     train_file = train_file.readlines()
     test_file = test_file.readlines()
 
-    print("Number of training reivews: " + str(len(train_file)))
+    print("Number of training reviews: " + str(len(train_file)))
     print("Number of test reviews: " + str(len(test_file)))
 
     num_train = 800000  # We're training on the first 800,000 reviews in the dataset
@@ -24,11 +25,9 @@ def create_data():
     train_file = [x.decode('utf-8') for x in train_file[:num_train]]
     test_file = [x.decode('utf-8') for x in test_file[:num_test]]
 
-    print(train_file[0])
+    print(f'Exemplary train review: "{train_file[0]}"')
 
     # Extracting labels from sentences
-
-    import spacy
     sp = spacy.load('en_core_web_sm')
 
     train_labels = [0 if x.split(' ')[0] == '__label__1' else 1 for x in train_file]
@@ -60,7 +59,7 @@ def create_data():
 
     del train_file, test_file
 
-    words = Counter()  # Dictionary that will map a word to the number of times it appeared in all the training sentences
+    words = Counter()  # Maps words to the numbers of times it appeared in all the training sentences
     for i, sentence in enumerate(train_sentences):
         # The sentences will be stored as a list of words/tokens
         train_sentences[i] = []
@@ -73,8 +72,8 @@ def create_data():
         train_pos.append(pos_taggs)
 
         if i % 20000 == 0:
-            print(str((i * 100) / num_train) + "% done")
-    print("100% done")
+            print(f"Loading data: {i / num_train * 100}% done...")
+    print("Loading data completed.")
 
     # Removing the words that only appear once
     words = {k: v for k, v in words.items() if v > 1}
@@ -116,55 +115,45 @@ def create_data():
     train_labels = np.array(train_labels)
     test_labels = np.array(test_labels)
 
-    #split_frac = 0.5
-    #split_id = int(split_frac * len(test_sentences))
-    #val_sentences, test_sentences = test_sentences[:split_id], test_sentences[split_id:]
-    #val_labels, test_labels = test_labels[:split_id], test_labels[split_id:]
-
     return train_sentences, train_pos, train_labels, test_sentences, test_pos, test_labels, word2idx
 
 
-all_pos_tags = [
-        'ADJ',
-        'ADP',
-        'ADV',
-        'AUX',
-        'CONJ',
-        'CCONJ',
-        'DET',
-        'INTJ',
-        'NOUN',
-        'NUM',
-        'PART',
-        'PRON',
-        'PROPN',
-        'PUNCT',
-        'SCONJ',
-        'SYM',
-        'VERB',
-        'X',
-        'SPACE'
-    ]
+ALL_POS_TAGS = [
+    'ADJ',
+    'ADP',
+    'ADV',
+    'AUX',
+    'CONJ',
+    'CCONJ',
+    'DET',
+    'INTJ',
+    'NOUN',
+    'NUM',
+    'PART',
+    'PRON',
+    'PROPN',
+    'PUNCT',
+    'SCONJ',
+    'SYM',
+    'VERB',
+    'X',
+    'SPACE'
+]
+
 
 def numerize_pos_tags(pos_tags, seq_len):
-
     for i, tag_list in enumerate(pos_tags):
-        #for ii, tag in enumerate(tag_list):
-        #    if tag in tags:
-        #        tag_list[i] = tags.index(tag)
-        #    else:
-        #        tag_list[i] = tags.index('X')
-
-        pos_tags[i] = [all_pos_tags.index(tag) if tag in all_pos_tags else all_pos_tags.index('X') for tag in tag_list]
+        pos_tags[i] = [ALL_POS_TAGS.index(tag) if tag in ALL_POS_TAGS else ALL_POS_TAGS.index('X') for tag in tag_list]
 
     features = np.zeros((len(pos_tags), seq_len), dtype=int)
-    for ii, review in enumerate(pos_tags):
+    for i, review in enumerate(pos_tags):
         if len(review) != 0:
-            features[ii, -len(review):] = np.array(review)[:seq_len]
+            features[i, -len(review):] = np.array(review)[:seq_len]
     return features
 
-def save_data(data, file_name):
-    with open(file_name, 'wb') as file:
+
+def save_data(data, file_path):
+    with open(file_path, 'wb') as file:
         pickle.dump(data, file, protocol=4)
 
 

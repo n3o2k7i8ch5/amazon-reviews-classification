@@ -2,14 +2,14 @@ import sys
 
 import torch
 
-import data_loader
+from data_loader import ALL_POS_TAGS
 
 
-# intakes a 1D vector, only from from a batch
+# takes a 1D vector, only from a batch
 # outputs a 2D tensor
 def to_super_tensor_from_tensor(input: torch.Tensor, pos) -> list:
     super_tensor = []
-    for tag_index in range(len(data_loader.all_pos_tags)):
+    for tag_index in range(len(ALL_POS_TAGS)):
         merged_vals = []
         for i in range(input.size()[0]):
             merged_vals.append(input[i].item() if pos[i] == tag_index else 0)
@@ -29,7 +29,7 @@ def to_super_tensor_from_list(input: list, pos: list) -> list:
             sys.stdout.flush()
 
         sup_tens = []
-        for tag_index in range(len(data_loader.all_pos_tags)):
+        for tag_index in range(len(ALL_POS_TAGS)):
 
             row = []
             for j in range(len(input[0])):
